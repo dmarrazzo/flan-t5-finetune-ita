@@ -6,8 +6,7 @@ from kfp.dsl import (
     Model,
 )
 
-@componentx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
--            for entry in onnx_pat(base_image="python:3.12",
+@component(base_image="python:3.12",
           packages_to_install=["optimum", "transformers>=4.30.0", "optimum[onnxruntime]"])
 def convert_model(
     checkpoint_dir: str,

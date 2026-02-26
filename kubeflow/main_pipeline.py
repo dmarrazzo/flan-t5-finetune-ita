@@ -16,6 +16,9 @@ from train_model import train_model
 from convert_model import convert_model
 from upload_model import push_to_model_registry
 
+# utility import
+from datetime import datetime
+
 # Pipeline definition
 
 # name of the data connection that points to the s3 model storage bucket
@@ -174,7 +177,7 @@ if __name__ == "__main__":
         "dataset_file_name": "ita_dataset.tar.gz",
         "pipeline_version": "1",
         "author_name": "DevOps Team",
-        "registry": "model-registry-rest",
+        "registry": "blu-registry-rest",
         "cluster_domain": "apps.ocp.lab",
         "model_path": "/data/model",
         "dataset_path": "/data/dataset",
@@ -193,20 +196,74 @@ if __name__ == "__main__":
 
     ssl_ca_cert = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
 
-    # compile pipeline to kubernetes yaml
-    compiler.Compiler().compile(training_pipeline, "finetune-pipeline.yaml")
-
-    # Run pipeline on cluster
     print(f"Connecting to Data Science Pipelines: {kubeflow_endpoint}")
+
     client = kfp.Client(
-        host=kubeflow_endpoint, existing_token=bearer_token, ssl_ca_cert=ssl_ca_cert
+         host=kubeflow_endpoint, existing_token=bearer_token, ssl_ca_cert=ssl_ca_cert
     )
 
-    # run ad-hoc pipeline
-    client.create_run_from_pipeline_func(
-        training_pipeline,
-        arguments=metadata,
-        experiment_name="flan-t5-anon-ita-finetune-pipeline",
-        enable_caching=True,
-    )
+    PIPELINE_NAME = "flan-t5-finetune"
+    PIPELINE_FILENAME = "training_pipeline.yaml"
+    VERSION_NAME = "v1.0.0" # Change this for each new version
+    
+    # Compile locally
+    compiler.Compiler().compile(training_pipeline, PIPELINE_FILENAME)
+    
+    try:
+        # Check if the pipeline already exists
+        pipeline_id = client.get_pipeline_id(PIPELINE_NAME)
 
+        if pipeline_id:
+            print(f"Pipeline found (ID: {pipeline_id}). Uploading new version...")
+        else:
+            # If it doesn't exist, upload it as a brand new pipeline
+            print(f"Pipeline '{PIPELINE_NAME}' not found. Creating new pipeline...")
+            pipeline_obj = client.upload_pipeline(
+                pipeline_package_path=PIPELINE_FILENAME,
+                pipeline_name=PIPELINE_NAME
+            )
+            pipeline_id = pipeline_obj.pipeline_id
+
+        # Upload version to the existing pipeline ID
+        print(f"Uploading new version...")
+        version_obj = client.upload_pipeline_version(
+            pipeline_package_path=PIPELINE_FILENAME,
+            pipeline_version_name=VERSION_NAME,
+            pipeline_id=pipeline_id
+        )
+
+        # Extract the Version ID (using the v2 attribute name)
+        target_version_id = version_obj.pipeline_version_id
+
+        print(f"Executing Version ID: {target_version_id}")
+
+        # Create or Get the experiment safely
+        # In KFP v2, this returns a V2beta1Experiment object
+        experiment = client.create_experiment(name="flan-t5-finetune-experiment")
+
+        # Extract the ID using the correct attribute name
+        # For KFP v2, use .experiment_id
+        exp_id = experiment.experiment_id
+
+        print(f"Using Experiment ID: {exp_id}")
+
+        # Generate a timestamp (YYYYMMDD-HHMMSS)
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        
+        # Define your base run name 
+        base_name = "flan-t5-finetune-run"
+        
+        # Combine them into a unique run name
+        run_name = f"{base_name}-{timestamp}"
+
+        # Trigger the run
+        client.run_pipeline(
+            experiment_id=exp_id,
+            job_name=run_name,
+            pipeline_id=pipeline_id,
+            version_id=target_version_id,
+            params=metadata
+        )
+
+    except Exception as e:
+        print(f"Detailed Error: {e}")
