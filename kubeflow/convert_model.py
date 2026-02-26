@@ -6,7 +6,8 @@ from kfp.dsl import (
     Model,
 )
 
-@component(base_image="python:3.12",
+@componentx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+-            for entry in onnx_pat(base_image="python:3.12",
           packages_to_install=["optimum", "transformers>=4.30.0", "optimum[onnxruntime]"])
 def convert_model(
     checkpoint_dir: str,
@@ -53,7 +54,14 @@ def convert_model(
         onnx_model._set_path(onnx_model.path + "-onnx.zip")
         onnx_path = Path(ONNX_DIR)
 
+        # zip & store
+        import zipfile
+        with zipfile.ZipFile(onnx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for entry in onnx_path.rglob("*"):
+                zip_file.write(entry, entry.relative_to(onnx_path))
+
     except Exception as e:
+        # This prints the full stack trace, including file names and line numbers
         print("--- DETAILED ERROR LOG ---")
         # Dig into the traceback object manually
         tb = e.__traceback__
