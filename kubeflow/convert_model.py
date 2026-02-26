@@ -6,8 +6,6 @@ from kfp.dsl import (
     Model,
 )
 
-import traceback
-
 @component(base_image="python:3.11",
           packages_to_install=["optimum", "transformers", "optimum[onnxruntime]"])
 def convert_model(
@@ -60,10 +58,23 @@ def convert_model(
             for entry in onnx_path.rglob("*"):
                 zip_file.write(entry, entry.relative_to(onnx_path))
 
-    except Exception:
+    except Exception as e:
         # This prints the full stack trace, including file names and line numbers
         print("--- DETAILED ERROR LOG ---")
-        traceback.print_exc() 
+        # Dig into the traceback object manually
+        tb = e.__traceback__
+        
+        # Trace through the stack to find the last call (where it actually failed)
+        while tb.tb_next:
+            tb = tb.tb_next
+        
+        # Extract frame info
+        file_name = tb.tb_frame.f_code.co_filename
+        line_number = tb.tb_lineno
+        function_name = tb.tb_frame.f_code.co_name
+        
+        print(f"Error: {e}")
+        print(f"Location: {file_name} | Line: {line_number} | In: {function_name}")
         print("--------------------------")
     
     finally:
