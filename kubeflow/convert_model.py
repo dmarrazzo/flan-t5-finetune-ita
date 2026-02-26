@@ -6,6 +6,7 @@ from kfp.dsl import (
     Model,
 )
 
+import traceback
 
 @component(base_image="python:3.11",
           packages_to_install=["optimum", "transformers", "optimum[onnxruntime]"])
@@ -44,26 +45,33 @@ def convert_model(
             WORKDIR,
             export=True
         )
-    except Exception as e:
-        print(f"Exception during model export: {e}")
 
-    # save onnx to disk
-    try:
+        # save onnx to disk
         model.save_pretrained(ONNX_DIR)
         tokenizer.save_pretrained(ONNX_DIR)
-    except Exception as e:
-        print(e)
 
-    # clean up
-    del model
-    del tokenizer
+        # save model to s3
+        onnx_model._set_path(onnx_model.path + "-onnx.zip")
+        onnx_path = Path(ONNX_DIR)
 
-    # save model to s3
-    onnx_model._set_path(onnx_model.path + "-onnx.zip")
-    onnx_path = Path(ONNX_DIR)
+        # zip & store
+        import zipfile
+        with zipfile.ZipFile(onnx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for entry in onnx_path.rglob("*"):
+                zip_file.write(entry, entry.relative_to(onnx_path))
 
-    # zip & store
-    import zipfile
-    with zipfile.ZipFile(onnx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for entry in onnx_path.rglob("*"):
-            zip_file.write(entry, entry.relative_to(onnx_path))
+    except Exception:
+        # This prints the full stack trace, including file names and line numbers
+        print("--- DETAILED ERROR LOG ---")
+        traceback.print_exc() 
+        print("--------------------------")
+    
+    finally:
+        # clean up
+        current_vars = locals()
+
+        if 'model' in current_vars:
+            del model
+        
+        if 'tokenizer' in current_vars:
+            del tokenizer
