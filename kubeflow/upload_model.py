@@ -43,6 +43,11 @@ def push_to_model_registry(
     environ["KF_PIPELINES_SA_TOKEN_PATH"] = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
     # Set up the model registry connection
+    if not registry:
+        cluster_domain = os.environ.get("REGISTRY_NAME")
+    if not cluster_domain:
+        cluster_domain = os.environ.get("REGISTRY_CLUSTER_DOMAIN")
+
     model_registry_url = f"https://{registry}.{cluster_domain}"
 
     # S3 parameters

@@ -148,6 +148,8 @@ def training_pipeline(
             "AWS_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
             "AWS_S3_BUCKET": "AWS_S3_BUCKET",
             "AWS_DEFAULT_REGION": "AWS_DEFAULT_REGION",
+            "REGISTRY_NAME": "REGISTRY_NAME",
+            "REGISTRY_CLUSTER_DOMAIN": "REGISTRY_CLUSTER_DOMAIN",
         },
     )
     # mount persistent volume...
@@ -177,8 +179,8 @@ if __name__ == "__main__":
         "dataset_file_name": "ita_dataset.tar.gz",
         "pipeline_version": "1",
         "author_name": "DevOps Team",
-        "registry": "blu-registry-rest",
-        "cluster_domain": "apps.ocp.lab",
+        "registry": "",
+        "cluster_domain": "",
         "model_path": "/data/model",
         "dataset_path": "/data/dataset",
         "finetuned_model_path": "/data/finetuned"
