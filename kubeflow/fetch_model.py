@@ -6,7 +6,7 @@ from kfp.dsl import (
 )
 
 
-@component(base_image="python:3.12"',
+@component(base_image="python:3.12",
            packages_to_install=["huggingface_hub"])
 def fetch_model(
     model_name: str,

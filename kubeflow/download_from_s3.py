@@ -7,7 +7,7 @@ from kfp.v2.dsl import (
 )
 
 @component(
-    base_image="python:3.12"',
+    base_image="python:3.12",
     packages_to_install=["boto3"],          # install boto3 in the container
 )
 def download_tar_from_s3(
