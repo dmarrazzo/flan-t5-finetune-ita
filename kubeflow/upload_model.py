@@ -44,7 +44,7 @@ def push_to_model_registry(
 
     # Set up the model registry connection
     if not registry:
-        cluster_domain = os.environ.get("REGISTRY_NAME")
+        registry = os.environ.get("REGISTRY_NAME")
     if not cluster_domain:
         cluster_domain = os.environ.get("REGISTRY_CLUSTER_DOMAIN")
 
