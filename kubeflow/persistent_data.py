@@ -9,7 +9,7 @@ from kfp.dsl import (
 )
 
 
-@component(base_image='python:3.11')
+@component(base_image="python:3.12"')
 def unzip_data(
     model_dir: str,
     dataset_dir: str,

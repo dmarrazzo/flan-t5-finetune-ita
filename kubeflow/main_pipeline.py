@@ -100,8 +100,8 @@ def training_pipeline(
                                    finetuned_model_dir=finetuned_model_path,
                                    hyperparameters=hyperparameters)
     train_model_task.after(unzip_data_task)
-    train_model_task.set_cpu_limit("8")
-    train_model_task.set_memory_limit("24G")
+    # train_model_task.set_cpu_limit("1")
+    # train_model_task.set_memory_limit("4G")
 
     # mount persistent volume...
     kubernetes.mount_pvc(
@@ -116,8 +116,8 @@ def training_pipeline(
         finetuned_model=train_model_task.outputs["finetuned_model"]
     )
     convert_task.after(train_model_task)
-    convert_task.set_cpu_limit("8")
-    convert_task.set_memory_limit("24G")
+    # convert_task.set_cpu_limit("1")
+    # convert_task.set_memory_limit("4G")
 
     # mount persistent volume...
     kubernetes.mount_pvc(

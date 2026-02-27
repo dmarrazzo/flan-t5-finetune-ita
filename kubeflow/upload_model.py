@@ -6,7 +6,7 @@ from kfp.dsl import (
 )
 
 
-@component(base_image='python:3.11',
+@component(base_image="python:3.12"',
            packages_to_install=['pip==24.2',
                                 'setuptools==74.1.3',
                                 'boto3==1.36.12',

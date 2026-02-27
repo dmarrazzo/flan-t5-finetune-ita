@@ -6,9 +6,8 @@ from kfp.dsl import (
     Model,
 )
 
-
-@component(base_image="python:3.11",
-          packages_to_install=["optimum", "transformers", "optimum[onnxruntime]"])
+@component(base_image="python:3.12",
+          packages_to_install=["optimum", "transformers>=4.30.0", "optimum[onnxruntime]"])
 def convert_model(
     checkpoint_dir: str,
     finetuned_model: Input[Model],
@@ -44,26 +43,40 @@ def convert_model(
             WORKDIR,
             export=True
         )
-    except Exception as e:
-        print(f"Exception during model export: {e}")
 
-    # save onnx to disk
-    try:
+        # save onnx to disk
         model.save_pretrained(ONNX_DIR)
         tokenizer.save_pretrained(ONNX_DIR)
+
+
+        # save model to s3
+        onnx_model._set_path(onnx_model.path + "-onnx.zip")
+        onnx_path = Path(ONNX_DIR)
+
     except Exception as e:
-        print(e)
+        print("--- DETAILED ERROR LOG ---")
+        # Dig into the traceback object manually
+        tb = e.__traceback__
+        
+        # Trace through the stack to find the last call (where it actually failed)
+        while tb.tb_next:
+            tb = tb.tb_next
+        
+        # Extract frame info
+        file_name = tb.tb_frame.f_code.co_filename
+        line_number = tb.tb_lineno
+        function_name = tb.tb_frame.f_code.co_name
+        
+        print(f"Error: {e}")
+        print(f"Location: {file_name} | Line: {line_number} | In: {function_name}")
+        print("--------------------------")
+    
+    finally:
+        # clean up
+        current_vars = locals()
 
-    # clean up
-    del model
-    del tokenizer
-
-    # save model to s3
-    onnx_model._set_path(onnx_model.path + "-onnx.zip")
-    onnx_path = Path(ONNX_DIR)
-
-    # zip & store
-    import zipfile
-    with zipfile.ZipFile(onnx_model.path, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for entry in onnx_path.rglob("*"):
-            zip_file.write(entry, entry.relative_to(onnx_path))
+        if 'model' in current_vars:
+            del model
+        
+        if 'tokenizer' in current_vars:
+            del tokenizer
