@@ -62,8 +62,11 @@ def delete_run_name_prefix (client, name_prefix):
                 print(f"Deleting run: {run.display_name} (ID: {run.run_id})")
                 
                 # Perform the deletion
-                client.delete_run(run.run_id)
-                deleted_count += 1
+                try:
+                    client.delete_run(run.run_id)
+                    deleted_count += 1
+                except Exception:
+                    print(f"Run {run.display_name} cannot be deleted.")
         
         if deleted_count == 0:
             print(f"No runs found prefixed by '{name_prefix}'.")
