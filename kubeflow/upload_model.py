@@ -31,6 +31,9 @@ def push_to_model_registry(
     from zipfile import ZipFile
     import os
 
+    # Log the exact path so you can see it in the KFP logs
+    print(f"Current File: {__file__}")
+
     import debugpy
     # Allow the debugger to attach on port 5678
     debugpy.listen(("0.0.0.0", 5678))
