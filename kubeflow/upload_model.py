@@ -10,7 +10,8 @@ from kfp.dsl import (
            packages_to_install=['pip==24.2',
                                 'setuptools==74.1.3',
                                 'boto3==1.36.12',
-                                'model-registry'])
+                                'model-registry',
+                                'debugpy'])
 def push_to_model_registry(
     model_name: str,
     finetuned_model: Input[Model],
@@ -29,6 +30,13 @@ def push_to_model_registry(
     from pathlib import Path
     from zipfile import ZipFile
     import os
+
+    import debugpy
+    # Allow the debugger to attach on port 5678
+    debugpy.listen(("0.0.0.0", 5678))
+    print("Waiting for debugger attach...")
+    debugpy.wait_for_client() # The code pauses here until you attach
+    breakpoint() # Optional: Forces the debugger to stop here
 
     # prepare workdir
     WORKDIR: str = f"{data_path}/scratch"
