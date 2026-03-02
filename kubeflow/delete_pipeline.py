@@ -41,14 +41,14 @@ def cascade_delete_pipeline(client, pipeline_name):
     except Exception as e:
         print(f"Error during deletion: {e}")
 
-def delete_runs_by_name(client, run_name_to_delete):
+def delete_run_name_prefix (client, name_prefix):
     """
     Finds and deletes all runs that match a specific display name.
     """
     try:
-        print(f"Searching for runs named: '{run_name_to_delete}'...")
+        print(f"Searching for runs which name starts with: '{name_prefix}'...")
         
-        # 1. Fetch runs (using page_size to ensure we see recent ones)
+        # Fetch runs (using page_size to ensure we see recent ones)
         # In KFP v2, the response attribute is .runs
         runs_response = client.list_runs(page_size=100)
         
@@ -58,16 +58,15 @@ def delete_runs_by_name(client, run_name_to_delete):
 
         deleted_count = 0
         for run in runs_response.runs:
-            # 2. Check for an exact match or partial match
-            if run.display_name == run_name_to_delete:
+            if run.display_name.startswith(name_prefix):
                 print(f"Deleting run: {run.display_name} (ID: {run.run_id})")
                 
-                # 3. Perform the deletion
+                # Perform the deletion
                 client.delete_run(run.run_id)
                 deleted_count += 1
         
         if deleted_count == 0:
-            print(f"No runs found matching the name '{run_name_to_delete}'.")
+            print(f"No runs found prefixed by '{name_prefix}'.")
         else:
             print(f"Successfully deleted {deleted_count} run(s).")
 
@@ -99,4 +98,4 @@ if __name__ == "__main__":
     # Use the name of the pipeline you want to wipe out
     cascade_delete_pipeline(client, PIPELINE_NAME)
     
-    #delete_runs_by_name(client, "flan-t5-finetune-run")
+    delete_run_name_prefix(client, PIPELINE_NAME)

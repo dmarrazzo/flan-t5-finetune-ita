@@ -20,11 +20,13 @@ from upload_model import push_to_model_registry
 from datetime import datetime
 
 # Pipeline definition
+PIPELINE_NAME = "flan-t5-finetune"
+PIPELINE_FILENAME = "finetune-pipeline.yaml"
+VERSION_NAME = "v1.0.0" # Change this for each new version
 
 # name of the data connection that points to the s3 model storage bucket
 datasets_connection_secret_name = "s3-datasets"
 data_connection_secret_name = "s3-models"
-artifacts_connection_secret_name = "s3-artifacts"
 huggingface_api_secret = "huggingface-secret"
 
 
@@ -203,10 +205,6 @@ if __name__ == "__main__":
     client = kfp.Client(
          host=kubeflow_endpoint, existing_token=bearer_token, ssl_ca_cert=ssl_ca_cert
     )
-
-    PIPELINE_NAME = "flan-t5-finetune"
-    PIPELINE_FILENAME = "training_pipeline.yaml"
-    VERSION_NAME = "v1.0.0" # Change this for each new version
     
     # Compile locally
     compiler.Compiler().compile(training_pipeline, PIPELINE_FILENAME)

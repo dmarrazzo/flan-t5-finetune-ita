@@ -6,11 +6,15 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "accelerate>=0.20.0",
+    "boto3>=1.42.59",
     "datasets>=2.12.0",
+    "debugpy>=1.8.17",
+    "docker>=7.1.0",
     "dotenv>=0.9.9",
     "evaluate>=0.4.0",
     "huggingface-hub>=0.35.3",
     "jupyter>=1.0.0",
+    "model-registry>=0.3.6",
     "notebook>=6.5.0",
     "onnxruntime>=1.23.1",
     "optimum[onnxruntime]>=2.0.0",

@@ -14,3 +14,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# .env
+.env*
+
+# vscode config
+.vscode
+
+# compiled pipeline
+finetune-pipeline.yaml
