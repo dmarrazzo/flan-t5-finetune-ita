@@ -65,9 +65,14 @@ def push_to_model_registry(
     s3_model_bucket = os.environ.get('AWS_S3_BUCKET')
     s3_region = os.environ.get("AWS_DEFAULT_REGION")
 
+    sa_token_file_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    with open(sa_token_file_path, "r") as token_file:
+        bearer_token = token_file.read()
+
     # registry connection object
     registry = ModelRegistry(server_address=model_registry_url,
-                             port=443, author=author_name, is_secure=False)
+                             port=443, author=author_name, is_secure=True,
+                             user_token=bearer_token)
 
     # Model details we want to register
     registered_model_name = model_name
