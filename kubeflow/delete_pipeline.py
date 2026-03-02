@@ -95,7 +95,9 @@ if __name__ == "__main__":
          host=kubeflow_endpoint, existing_token=bearer_token, ssl_ca_cert=ssl_ca_cert
     )
 
+    # delete all runs
+    delete_run_name_prefix(client, PIPELINE_NAME)
+    
     # Use the name of the pipeline you want to wipe out
     cascade_delete_pipeline(client, PIPELINE_NAME)
     
-    delete_run_name_prefix(client, PIPELINE_NAME)
